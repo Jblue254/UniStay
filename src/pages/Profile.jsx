@@ -76,7 +76,7 @@ const Profile = () => {
         <div className="max-w-6xl mx-auto">
           {showSuccess && (
             <div className="mb-6 rounded-lg bg-green-100 border border-green-400 text-green-700 px-4 py-3">
-              ✅ Profile saved successfully!
+               Profile saved successfully!
             </div>
           )}
 
