@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const BookingForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useAuth();
 
   const [booking, setBooking] = useState({
-    fullName: "",
-    email: "",
+    fullName: user?.name || "",
+    email: user?.email || "",
     phone: "",
     viewingDate: "",
     viewingTime: "",
@@ -24,16 +26,18 @@ const BookingForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Scoped to the logged-in user so Profile can look this up reliably —
+    // ProtectedRoute guarantees `user` exists by the time this form is reachable.
     localStorage.setItem(
-      "bookedHostel",
+      `bookedHostel_${user.email}`,
       JSON.stringify({
         hostelId: id,
         ...booking,
         status: "Viewing Booked",
+        createdAt: new Date().toISOString(),
       }),
     );
 
- 
     navigate("/booking-confirmation");
   };
 

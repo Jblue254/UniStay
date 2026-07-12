@@ -8,130 +8,133 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getProperties } from "@/services/rentcast";
+import { getHostelImages } from "@/services/unsplash";
 
 const NAVY = "#0E1733";
 const ORANGE = "#F98603";
 
 export default function ManageListings() {
-  const [hostels, setHostels] = useState([]);
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored =
-      JSON.parse(localStorage.getItem("hostels")) || [];
-
-    setHostels(stored);
+    loadListings();
   }, []);
 
-  const deleteListing = (id) => {
-    if (!window.confirm("Delete this listing?")) return;
+  const loadListings = async () => {
+    try {
+      setLoading(true);
 
-    const updated = hostels.filter(
-      (hostel) => hostel.id !== id
-    );
+      const properties = await getProperties();
+      const images = await getHostelImages(20);
 
-    setHostels(updated);
+      const combined = properties.map((property, index) => ({
+        ...property,
+        image:
+          images[index]?.urls?.regular ||
+          images[index]?.urls?.small ||
+          "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=600",
+      }));
 
-    localStorage.setItem(
-      "hostels",
-      JSON.stringify(updated)
-    );
+      setListings(combined);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-slate-100">
       <AdminNavbar />
 
-      <div className="max-w-7xl mx-auto p-8">
-
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <Card>
 
-          <CardHeader className="flex flex-row justify-between items-center">
-
-            <CardTitle className="text-2xl">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle
+              className="text-2xl font-bold"
+              style={{ color: NAVY }}
+            >
               Manage Listings
             </CardTitle>
 
             <Link to="/addhostel">
               <Button
-                style={{ backgroundColor: ORANGE }}
+                style={{
+                  backgroundColor: NAVY,
+                  color: "white",
+                }}
               >
-                + Add Hostel
+                + Add Listing
               </Button>
             </Link>
-
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="overflow-x-auto">
 
-            {hostels.length === 0 ? (
-
-              <div className="text-center py-12">
-
-                <h2 className="text-2xl font-bold">
-                  No Listings Yet
-                </h2>
-
-                <p className="text-gray-500 mt-2">
-                  Start by adding your first hostel.
-                </p>
-
-              </div>
-
+            {loading ? (
+              <p className="text-center py-10">
+                Loading listings...
+              </p>
             ) : (
 
               <table className="w-full">
 
-                <thead
-                  className="text-white"
-                  style={{ backgroundColor: NAVY }}
-                >
+                <thead className="bg-[#F98603] text-white">
                   <tr>
-                    <th className="p-4 text-left">Hostel</th>
-                    <th className="p-4 text-left">Location</th>
-                    <th className="p-4 text-left">Rent</th>
-                    <th className="p-4 text-left">Status</th>
-                    <th className="p-4 text-center">Actions</th>
+                    <th className="p-3 text-left">Image</th>
+                    <th className="p-3 text-left">Address</th>
+                    <th className="p-3 text-left">City</th>
+                    <th className="p-3 text-left">Bedrooms</th>
+                    <th className="p-3 text-left">Bathrooms</th>
+                    <th className="p-3 text-left">Type</th>
+                    <th className="p-3 text-center">Actions</th>
                   </tr>
                 </thead>
 
                 <tbody>
 
-                  {hostels.map((hostel) => (
+                  {listings.map((listing) => (
 
                     <tr
-                      key={hostel.id}
-                      className="border-b"
+                      key={listing.id}
+                      className="border-b hover:bg-gray-50"
                     >
 
-                      <td className="p-4 font-semibold">
-                        {hostel.hostelName}
+                      <td className="p-3">
+                        <img
+                          src={listing.image}
+                          alt="Hostel"
+                          className="w-24 h-16 object-cover rounded-lg"
+                        />
                       </td>
 
-                      <td className="p-4">
-                        {hostel.area}, {hostel.county}
+                      <td className="p-3">
+                        {listing.formattedAddress}
                       </td>
 
-                      <td className="p-4">
-                        KES {hostel.rent}
+                      <td className="p-3">
+                        {listing.city}
                       </td>
 
-                      <td className="p-4">
-                        <span className="px-3 py-1 rounded-full bg-green-100 text-green-700">
-                          Available
-                        </span>
+                      <td className="p-3">
+                        {listing.bedrooms ?? "-"}
                       </td>
 
-                      <td className="p-4">
+                      <td className="p-3">
+                        {listing.bathrooms ?? "-"}
+                      </td>
 
-                        <div className="flex gap-2 justify-center">
+                      <td className="p-3">
+                        {listing.propertyType}
+                      </td>
 
-                          <Link
-                            to={`/hostels/${hostel.id}`}
-                          >
-                            <Button size="sm">
-                              View
-                            </Button>
-                          </Link>
+                      <td className="p-3">
+
+                        <div className="flex justify-center gap-2">
+
 
                           <Button
                             size="sm"
@@ -143,9 +146,6 @@ export default function ManageListings() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() =>
-                              deleteListing(hostel.id)
-                            }
                           >
                             Delete
                           </Button>
@@ -167,7 +167,6 @@ export default function ManageListings() {
           </CardContent>
 
         </Card>
-
       </div>
     </div>
   );

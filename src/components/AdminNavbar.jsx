@@ -10,6 +10,7 @@ const navLinks = [
   { to: "/admindash", label: "Dashboard", icon: LayoutDashboard },
   { to: "/managebookings", label: "Bookings", icon: List },
   { to: "/manageusers", label: "Users", icon: Users },
+  { to: "/managelistings", label: "Listings", icon: Users },
 ];
 
 function AdminNavbar() {

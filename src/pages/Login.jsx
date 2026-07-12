@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 
@@ -20,6 +20,13 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState(null); 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Where ProtectedRoute sent the user from (e.g. "/booking/12"), if any.
+  // Only relevant for regular users — admins always land on /admindash.
+  const from = location.state?.from
+    ? `${location.state.from.pathname}${location.state.from.search || ''}`
+    : '/';
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -68,7 +75,9 @@ function Login() {
       // Show a brief "Signed in as {name}" toast before redirecting.
       setToast({ name: fakeUser.name });
       setTimeout(() => {
-       navigate(isAdmin ? '/admindash' : '/');
+       // Admins always go to their dashboard; everyone else goes back to
+       // whatever they were trying to do (e.g. booking a hostel), or home.
+       navigate(isAdmin ? '/admindash' : from, { replace: true });
       }, 1200);
     } catch (err) {
       setError(err.message || 'Invalid email or password. Please try again.');

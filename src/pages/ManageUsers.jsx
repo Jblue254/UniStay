@@ -1,13 +1,4 @@
 import { useEffect, useState } from "react";
-/* import {
-  collection,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc,
-} from "firebase/firestore";
-import { db } from "../firebase"; */
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,149 +11,171 @@ import AdminNavbar from "@/components/AdminNavbar";
 export default function ManageUsers() {
   const [users, setUsers] = useState([]);
 
-  const fetchUsers = async () => {
-    try {
-      const snapshot = await getDocs(collection(db, "users"));
+  // Fetch users from localStorage
+  const fetchUsers = () => {
+    const storedUsers =
+      JSON.parse(localStorage.getItem("users")) || [];
 
-      const userList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setUsers(userList);
-    } catch (error) {
-      console.log(error);
-    }
+    setUsers(storedUsers);
   };
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  const suspendUser = async (id) => {
-    try {
-      await updateDoc(doc(db, "users", id), {
-        status: "Suspended",
-      });
+  // Activate User
+  const activateUser = (id) => {
+    const updatedUsers = users.map((user) =>
+      user.id === id
+        ? { ...user, status: "Active" }
+        : user
+    );
 
-      fetchUsers();
-    } catch (error) {
-      console.log(error);
-    }
+    localStorage.setItem(
+      "users",
+      JSON.stringify(updatedUsers)
+    );
+
+    setUsers(updatedUsers);
   };
 
-  const activateUser = async (id) => {
-    try {
-      await updateDoc(doc(db, "users", id), {
-        status: "Active",
-      });
+  // Suspend User
+  const suspendUser = (id) => {
+    const updatedUsers = users.map((user) =>
+      user.id === id
+        ? { ...user, status: "Suspended" }
+        : user
+    );
 
-      fetchUsers();
-    } catch (error) {
-      console.log(error);
-    }
+    localStorage.setItem(
+      "users",
+      JSON.stringify(updatedUsers)
+    );
+
+    setUsers(updatedUsers);
   };
 
-  const deleteUser = async (id) => {
+  // Delete User
+  const deleteUser = (id) => {
     if (!window.confirm("Delete this user?")) return;
 
-    try {
-      await deleteDoc(doc(db, "users", id));
-      fetchUsers();
-    } catch (error) {
-      console.log(error);
-    }
+    const updatedUsers = users.filter(
+      (user) => user.id !== id
+    );
+
+    localStorage.setItem(
+      "users",
+      JSON.stringify(updatedUsers)
+    );
+
+    setUsers(updatedUsers);
   };
 
   return (
-    <div>
-    <AdminNavbar/>
-    <div className="p-8 mt-4 bg-slate-100 min-h-screen">
-      <Card>
-        <CardHeader>
-          <CardTitle>Manage Users</CardTitle>
-        </CardHeader>
+    <div className="min-h-screen bg-slate-100">
+      <AdminNavbar />
 
-        <CardContent className="overflow-x-auto">
+      <div className="p-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">
+              Manage Users
+            </CardTitle>
+          </CardHeader>
 
-          <table className="w-full">
-
-            <thead className="bg-[#F98603] text-white">
-
-              <tr>
-                <th className="p-3 text-left">Name</th>
-                <th className="p-3 text-left">Email</th>
-                <th className="p-3 text-left">Phone</th>
-                <th className="p-3 text-left">Role</th>
-                <th className="p-3 text-left">Status</th>
-                <th className="p-3 text-center">Actions</th>
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              {users.map((user) => (
-
-                <tr
-                  key={user.id}
-                  className="border-b hover:bg-gray-50"
-                >
-
-                  <td className="p-3">{user.name}</td>
-
-                  <td className="p-3">{user.email}</td>
-
-                  <td className="p-3">{user.phone}</td>
-
-                  <td className="p-3">{user.role}</td>
-
-                  <td className="p-3">
-                    {user.status}
-                  </td>
-
-                  <td className="p-3">
-
-                    <div className="flex gap-2 justify-center">
-
-                      <Button
-                        size="sm"
-                        onClick={() => activateUser(user.id)}
-                      >
-                        Activate
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => suspendUser(user.id)}
-                      >
-                        Suspend
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => deleteUser(user.id)}
-                      >
-                        Delete
-                      </Button>
-
-                    </div>
-
-                  </td>
-
+          <CardContent className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[#F98603] text-white">
+                <tr>
+                  <th className="p-3 text-left">Name</th>
+                  <th className="p-3 text-left">Email</th>
+                  <th className="p-3 text-left">Phone</th>
+                  <th className="p-3 text-left">Role</th>
+                  <th className="p-3 text-left">Status</th>
+                  <th className="p-3 text-center">Actions</th>
                 </tr>
+              </thead>
 
-              ))}
+              <tbody>
+                {users.length > 0 ? (
+                  users.map((user) => (
+                    <tr
+                      key={user.id}
+                      className="border-b hover:bg-gray-50"
+                    >
+                      <td className="p-3">{user.name}</td>
 
-            </tbody>
+                      <td className="p-3">{user.email}</td>
 
-          </table>
+                      <td className="p-3">
+                        {user.phone || "-"}
+                      </td>
 
-        </CardContent>
-      </Card>
-    </div>
+                      <td className="p-3 capitalize">
+                        {user.role}
+                      </td>
+
+                      <td className="p-3">
+                        <span
+                          className={`font-semibold ${
+                            user.status === "Active"
+                              ? "text-green-600"
+                              : "text-red-500"
+                          }`}
+                        >
+                          {user.status || "Active"}
+                        </span>
+                      </td>
+
+                      <td className="p-3">
+                        <div className="flex justify-center gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              activateUser(user.id)
+                            }
+                          >
+                            Activate
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              suspendUser(user.id)
+                            }
+                          >
+                            Suspend
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() =>
+                              deleteUser(user.id)
+                            }
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="text-center py-10 text-gray-500"
+                    >
+                      No users found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

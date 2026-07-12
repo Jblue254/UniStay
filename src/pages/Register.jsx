@@ -38,11 +38,32 @@ setFormData({ ...formData, [e.target.name]: e.target.value });
  
       await new Promise((resolve) => setTimeout(resolve, 1200));
  
-      const fakeToken = "jwt-access-token-example";
-      const fakeUser = { id: "u-secure-2", email: formData.email, name: formData.name, role: "user" };
- 
-      // register() (from AuthContext) already persists to localStorage.
-      register(fakeToken, fakeUser);
+     const fakeToken = "jwt-access-token-example";
+
+const fakeUser = {
+  id: Date.now(),
+  email: formData.email,
+  name: formData.name,
+  role: "user",
+};
+
+// Get existing users
+const users = JSON.parse(localStorage.getItem("users")) || [];
+
+// Prevent duplicate emails
+const emailExists = users.some(
+  (user) => user.email === formData.email
+);
+
+if (emailExists) {
+  throw new Error("An account with this email already exists.");
+}
+
+// Save user
+users.push(fakeUser);
+localStorage.setItem("users", JSON.stringify(users));
+
+register(fakeToken, fakeUser);
  
       // Show a brief "Account created" toast before redirecting.
       setToast({ name: fakeUser.name });
