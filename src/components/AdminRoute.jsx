@@ -8,7 +8,7 @@ export const AdminRoute = ({ children }) => {
  
   if (!isAuthenticated) {
     // Not logged in at all — send to login first.
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
  
   if (!isAdmin) {
